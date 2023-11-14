@@ -12,53 +12,42 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
 Route::get('/', function () {
-    return "Pantalla principal";
+    return view('home');
 });
 
 Route::get('login', function () {
-    return "Login usuario";
+    return view('auth.login');
 });
 
 Route::get('logout', function () {
-    return "Pantalla de Logout usuario";
+    return "Logout usuario";
 });
 
-
-
-Route::prefix('proyectos')->group(function () {
+Route::prefix('catalog')->group(function () {
     Route::get('/', function () {
-        return "Listado proyectos";
-
+        return view('catalog.index');
     });
-
     Route::get('/show/{id}', function ($id) {
-        return "Vista detalle proyecto " . $id;
-    })->where('id', '[0-9]+');
+        return view('catalog.show', array('id'=>$id));
+    })
+        ->where('id', '[0-9]+');
 
     Route::get('/create', function () {
-        return "Añadir proyecto";
+        return view('catalog.create');
     });
 
     Route::get('/edit/{id}', function ($id) {
-        return "Modificar proyecto ". $id;
-    })->where('id', '[0-9]+');
-
-
+        return view('catalog.edit', array('id'=>$id));
+    })
+        ->where('id', '[0-9]+');
 });
 
 Route::get('perfil/{id?}', function ($id = null) {
-
-    if($id === null){
-        $id="propio";
-    }else{
-        $id = "de " . $id;
+    if ($id == null) {
+        return "Visualizar el currículo propio";
+    } else {
+        return "Visualizar el currículo de " . $id;
     }
-
-    return "Visualizar el currículo " . $id;
-})->where('id', '[0-9]+');
-
-
-
-
+})
+    ->where('id', '[0-9]+');
