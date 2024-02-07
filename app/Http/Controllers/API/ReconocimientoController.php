@@ -42,7 +42,14 @@ class ReconocimientoController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
         $reconocimiento = json_decode($request->getContent(), true);
+        if($user->esEstudiante()){
+            unset($reconocimiento['docente_validador']);
+            $reconocimiento['estudiante_id'] = $user->id;
+        }elseif($user->esEstudiante()){
+            $reconocimiento['docente_validador'] = $user->id;
+        }
         $reconocimiento = Reconocimiento::create($reconocimiento);
 
         return new ReconocimientoResource($reconocimiento);
@@ -61,7 +68,13 @@ class ReconocimientoController extends Controller
      */
     public function update(Request $request, Reconocimiento $reconocimiento)
     {
+        $user = auth()->user();
         $reconocimientoData = json_decode($request->getContent(), true);
+
+        if(!$user->esAdmin() && !$user->esDocente()){
+            $reconocimientoData['docente_validador'] = $reconocimiento->docente_validador;
+            $reconocimientoData['estudiante_id'] = $reconocimiento->estudiante_id;
+        }
         $reconocimiento->update($reconocimientoData);
 
         return new ReconocimientoResource($reconocimiento);
@@ -75,21 +88,15 @@ class ReconocimientoController extends Controller
         $reconocimiento->delete();
     }
 
-    public function crearReconocimiento(Request $request){
+    public function validar($id){
 
-        $reconocimiento = new Reconocimiento($request->all());
-        if (!auth()->user()->esDocente() && !auth()->user()->esAdmin()){
-            $reconocimiento->docente_validador = null;
-        }
+        $this->authorize('validar', Reconocimiento::class);
+
+        $reconocimiento = Reconocimiento::findOrFail($id);
+
+        $reconocimiento->docente_validador = auth()->user()->id;
+        $reconocimiento->fecha = date('d/m/y');
         $reconocimiento->save();
-    }
-
-    public function validarReconocimiento(Request $request, Reconocimiento $reconocimiento){
-
-        if($reconocimiento->validarReconocimiento(auth()->id())){
-
-        }else{
-            return response()->json(['error' => 'Not authorized.'],403);
         }
     }
-}
+
